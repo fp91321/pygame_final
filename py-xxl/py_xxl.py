@@ -26,10 +26,10 @@ class Puzzle(pygame.sprite.Sprite):
 		self.target_y = position[1] + downlen
 		self.type = img_path.split('/')[-1].split('.')[0]
 		self.fixed = False
-		self.speed_x = 10
-		self.speed_y = 10
+		self.speed_x = 8
+		self.speed_y = 8
 		self.direction = 'down'
-	# 拼图块移动
+	# Moves the block in the specified direction and stops it when reaching the target position
 	def move(self):
 		if self.direction == 'down':
 			self.rect.top = min(self.target_y, self.rect.top+self.speed_y)
@@ -47,10 +47,10 @@ class Puzzle(pygame.sprite.Sprite):
 			self.rect.left = min(self.target_x, self.rect.left+self.speed_x)
 			if self.target_x == self.rect.left:
 				self.fixed = True
-	# 获取坐标
+	# Returns the current coordinates of the block.
 	def getPosition(self):
 		return self.rect.left, self.rect.top
-	# 设置坐标
+	# Updates the block's coordinates.
 	def setPosition(self, position):
 		self.rect.left, self.rect.top = position
 
@@ -117,7 +117,7 @@ class Game():
 						individual_moving = False
 						gem_selected_xy = None
 						gem_selected_xy2 = None
-			self.screen.fill((127,127,127))
+			self.screen.fill((10,127,127))
 			self.drawGrids()
 			self.gems_group.draw(self.screen)
 			if gem_selected_xy:
@@ -163,13 +163,13 @@ class Game():
 		self.remaining_time = 30
 	# 显示剩余时间
 	def showRemainingTime(self):
-		remaining_time_render = self.font.render('Count Down: %ss' % str(self.remaining_time), 1, (75, 205, 255))
+		remaining_time_render = self.font.render('Count Down: %ss' % str(self.remaining_time), 1, (55, 205, 255))
 		rect = remaining_time_render.get_rect()
-		rect.left, rect.top = (WIDTH-220, 15)
+		rect.left, rect.top = (WIDTH-300, 15)
 		self.screen.blit(remaining_time_render, rect)
 	# 显示得分
 	def drawScore(self):
-		score_render = self.font.render('Score:'+str(self.score), 1, (85, 65, 0))
+		score_render = self.font.render('Score:'+str(self.score), 1, (45, 195, 245))
 		rect = score_render.get_rect()
 		rect.left, rect.top = (30, 15)
 		self.screen.blit(score_render, rect)
@@ -320,7 +320,8 @@ def gameInit():
 	screen = pygame.display.set_mode((WIDTH, HEIGHT))
 	pygame.display.set_caption('2024_PyGame_Final_Project')
 	# 加载字体
-	font = pygame.font.Font(os.path.join(ROOTDIR, 'resources/simsun.ttc'), 25)
+	#font = pygame.font.Font(os.path.join(ROOTDIR, 'resources/simsun.ttc'), 40)
+	font = pygame.font.SysFont('Arial', 30, bold=True)
 	# 加载图片
 	gem_imgs = []
 	for i in range(1, 8):
@@ -344,7 +345,7 @@ def gameInit():
 			text1 = 'Press R to Restart'
 			y = 140
 			for idx, text in enumerate([text0, text1]):
-				text_render = font.render(text, 1, (85, 65, 0))
+				text_render = font.render(text, 1, (65, 65, 0))
 				rect = text_render.get_rect()
 				if idx == 0:
 					rect.left, rect.top = (80, y)
