@@ -314,6 +314,39 @@ class Game():
 	def __repr__(self):
 		return self.info
 
+# 添加“开始游戏”页面
+def showStartScreen(screen, font):
+    # 加载背景图片
+	bg_image_path = os.path.join(ROOTDIR, 'resources/images/background.JPG')  # 替换为实际图片名称
+	bg_image = pygame.image.load(bg_image_path)    
+	# 裁剪背景图片
+	#bg_image = pygame.transform.rotate(bg_image, 90)
+	bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT)) 
+    
+    
+	while True:
+		screen.blit(bg_image, (0, 0))  # 绘制背景图片
+        
+        # 游戏标题
+		title_text = font.render('2024 PyGame Final Project', True, (255, 255, 255))
+		title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 3))
+		screen.blit(title_text, title_rect)
+        
+        # 开始提示
+		start_text = font.render('Click anywhere to start the game!!', True, (255, 255, 100))
+		start_rect = start_text.get_rect(center=(WIDTH // 2, HEIGHT // (7/3)))
+		screen.blit(start_text, start_rect)
+        
+		pygame.display.update()
+        
+        # 等待玩家点击
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				pygame.quit()
+				sys.exit()
+			elif event.type == pygame.MOUSEBUTTONDOWN:
+				return
+
 # 初始化游戏
 def gameInit():
 	pygame.init()
@@ -322,16 +355,30 @@ def gameInit():
 	# 加载字体
 	#font = pygame.font.Font(os.path.join(ROOTDIR, 'resources/simsun.ttc'), 40)
 	font = pygame.font.SysFont('Arial', 30, bold=True)
+	font_end = pygame.font.SysFont('Arial', 50, bold=True)
 	# 加载图片
 	gem_imgs = []
 	for i in range(1, 8):
 		gem_imgs.append(os.path.join(ROOTDIR, 'resources/images/gem%s.png' % i))
 	game = Game(screen, font, gem_imgs)
+
+	# 显示开始页面
+	showStartScreen(screen, font)
+
 	while True:
 		score = game.start()
 		flag = False
 		# 设置退出、重新开始
+		bg_image_path = os.path.join(ROOTDIR, 'resources/images/endgame.JPG')  # 替换为实际图片名称
+		bg_image = pygame.image.load(bg_image_path)    
+		# 裁剪背景图片
+		#bg_image = pygame.transform.rotate(bg_image, 90)
+		bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))
+		
+
 		while True:
+			
+
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
 					pygame.quit()
@@ -340,18 +387,25 @@ def gameInit():
 					flag = True
 			if flag:
 				break
-			screen.fill((127, 255, 127))
-			text0 = 'Final Scores: %s' % score
-			text1 = 'Press R to Restart'
+			#screen.fill((127, 255, 127))
+
+			text0 = 'Good Game'
+			text1 = 'Final Scores: %s' % score
+			text2 = 'Press R to Restart'
+			
+			screen.blit(bg_image, (0, 0))  # 绘制背景图片
 			y = 140
-			for idx, text in enumerate([text0, text1]):
-				text_render = font.render(text, 1, (65, 65, 0))
+			for idx, text in enumerate([text0, text1, text2]):
+				text_render = font_end.render(text, 1, (255, 200, 0))
 				rect = text_render.get_rect()
 				if idx == 0:
 					rect.left, rect.top = (80, y)
 				elif idx == 1:
 					rect.left, rect.top = (80, y)
-				y += 60
+				elif idx == 2:
+					rect.left, rect.top = (80, y)
+				y += 120
+				
 				screen.blit(text_render, rect)
 			pygame.display.update()
 		game.reset()
