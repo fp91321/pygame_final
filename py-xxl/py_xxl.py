@@ -225,8 +225,9 @@ class Game():
 			start = res_match[2]
 			while start > -2:
 				if res_match[3] == 3:
-					print("im 3")					
+									
 					for each in [res_match[1], res_match[1]+1, res_match[1]+2]:
+
 						gem = self.getGemByPos(*[each, start])
 						if start == res_match[2]:
 							self.gems_group.remove(gem)
@@ -244,9 +245,9 @@ class Game():
 								)
 							self.gems_group.add(gem)
 							self.all_gems[each][start+1] = gem
-				elif res_match[3] == 4 :
-					print("im 5")
+				elif res_match[3] == 4 :					
 					for each in [res_match[1], res_match[1]+1, res_match[1]+2, res_match[1]+3]:
+
 						gem = self.getGemByPos(*[each, start])
 						if start == res_match[2]:
 							self.gems_group.remove(gem)
@@ -265,9 +266,10 @@ class Game():
 							self.gems_group.add(gem)
 							self.all_gems[each][start+1] = gem
 				elif res_match[3] == 5 :
-					print("im 5")	
-					for each in [res_match[1], res_match[1]+1, res_match[1]+2, res_match[1]+3, res_match[3]+4]:
+
+					for each in [res_match[1], res_match[1]+1, res_match[1]+2, res_match[1]+3, res_match[1]+4,]:
 						gem = self.getGemByPos(*[each, start])
+
 						if start == res_match[2]:
 							self.gems_group.remove(gem)
 							self.all_gems[each][start] = None
