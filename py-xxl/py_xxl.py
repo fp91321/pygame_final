@@ -171,13 +171,13 @@ class Game():
 		# 測試佈局的定義
 		# 測試水平與垂直 3 消、4 消、5 消
 		test_layout = [
-			[1, 1, 2, 1, 3, 4, 5, 6, 1, 6],  # 水平 3 消（最上）
+			[1, 1, 2, 1, 3, 4, 5, 6, 1, 1],  # 水平 3 消（最上）
 			[4, 4, 1, 4, 4, 3, 5, 6, 5, 1],  # 水平 4 消（第二行）
-			[5, 5, 3, 5, 5, 3, 1, 2, 4, 4],  # 水平 5 消（第三行）
-			[1, 2, 5, 4, 5, 1, 2, 3, 4, 5],  # 無消除
-			[2, 3, 4, 5, 1, 2, 1, 4, 3, 2],  # 水平 3 消（第五行）
-			[3, 3, 2, 4, 5, 5, 6, 6, 1, 1],  # 水平 3 消（第六行）
-			[6, 6, 3, 6, 6, 2, 3, 4, 5, 1],  # 無消除
+			[5, 5, 3, 5, 5, 3, 1, 2, 1, 4],  # 水平 5 消（第三行）
+			[1, 2, 5, 4, 5, 1, 2, 3, 4, 1],  # 無消除
+			[2, 3, 4, 5, 1, 5, 1, 4, 3, 1],  # 水平 3 消（第五行）
+			[3, 3, 2, 4, 5, 5, 6, 6, 1, 2],  # 水平 3 消（第六行）
+			[6, 6, 3, 6, 6, 2, 5, 4, 5, 1],  # 無消除
 			[1, 1, 2, 1, 4, 5, 2, 3, 4, 5],  # 無消除
 			[5, 4, 3, 3, 1, 5, 4, 1, 2, 1],  # 水平 4 消（第九行）
 			[3, 3, 5, 3, 3, 1, 1, 3, 1, 1]   # 水平 3 消（第十行）
@@ -267,7 +267,7 @@ class Game():
 							self.all_gems[each][start+1] = gem
 				elif res_match[3] == 5 :
 
-					for each in [res_match[1], res_match[1]+1, res_match[1]+2, res_match[1]+3, res_match[1]+4,]:
+					for each in [res_match[1], res_match[1]+1, res_match[1]+2, res_match[1]+3, res_match[1]+4]:
 						gem = self.getGemByPos(*[each, start])
 
 						if start == res_match[2]:
@@ -289,26 +289,35 @@ class Game():
 				start -= 1
 		elif res_match[0] == 2:
 			start = res_match[2]
-			while start > -4:
+			length = res_match[3]  # 消除的垂直長度（3、4 或 5）
+			while start > -length-1:  # 處理範圍擴展到 `-length`
+				
 				if start == res_match[2]:
-					for each in range(0, 3):
-						gem = self.getGemByPos(*[res_match[1], start+each])
+					# 移除起始行的所有匹配方塊
+					for each in range(0, length):
+						gem = self.getGemByPos(*[res_match[1], start + each])
 						self.gems_group.remove(gem)
-						self.all_gems[res_match[1]][start+each] = None
+						self.all_gems[res_match[1]][start + each] = None
+
 				elif start >= 0:
+					# 處理非初始行的方塊，讓它們掉落
 					gem = self.getGemByPos(*[res_match[1], start])
-					gem.target_y += GRIDSIZE * 3
+					gem.target_y += GRIDSIZE * length  # 根據匹配長度動態移動
 					gem.fixed = False
 					gem.direction = 'down'
-					self.all_gems[res_match[1]][start+3] = gem
+					self.all_gems[res_match[1]][start + length] = gem
+
 				else:
-					gem = Puzzle(img_path=random.choice(self.gem_imgs), 
+					# 超出範圍，生成新方塊補充
+					gem = Puzzle(
+						img_path=random.choice(self.gem_imgs), 
 						size=(GRIDSIZE, GRIDSIZE), 
-						position=[XMARGIN+res_match[1]*GRIDSIZE, YMARGIN+start*GRIDSIZE], 
-						downlen=GRIDSIZE*3
-						)
+						position=[XMARGIN + res_match[1] * GRIDSIZE, YMARGIN + start * GRIDSIZE],
+						downlen=GRIDSIZE * length  # 動態指定掉落距離
+					)
 					self.gems_group.add(gem)
-					self.all_gems[res_match[1]][start+3] = gem
+					self.all_gems[res_match[1]][start + length] = gem
+
 				start -= 1
 	# 移除匹配的元素
 	def removeMatched(self, res_match):
@@ -356,12 +365,12 @@ class Game():
 	# 是否有连续一样的三个块
 	def isMatch(self):
 		max_match = [0, 0, 0, 0]  # [方向 (1: 橫, 2: 直), 起點x, 起點y, 最大匹配長度]
-		#checked = [[False] * NUMGRID for _ in range(NUMGRID)]  # 用於標記是否已檢查
+		checked = [[False] * NUMGRID for _ in range(NUMGRID)]  # 用於標記是否已檢查
 
 		for x in range(NUMGRID):
 			for y in range(NUMGRID):
-				#if checked[x][y]:
-				#	continue  # 跳過已檢查範圍
+				if checked[x][y]:
+					continue  # 跳過已檢查範圍
 
 				# 檢查橫向連續
 				match_length = 1
@@ -375,8 +384,8 @@ class Game():
 						print(match_length)
 						max_match = [1, x, y, match_length]
 					# 標記已檢查的格子
-					#for i in range(match_length):
-						#checked[x + i][y] = True
+					for i in range(match_length):
+						checked[x + i][y] = True
 
 				# 檢查縱向連續
 				match_length = 1
@@ -390,8 +399,8 @@ class Game():
 						print(match_length)
 						max_match = [2, x, y, match_length]
 					# 標記已檢查的格子
-					#for i in range(match_length):
-						#checked[x][y + i] = True
+					for i in range(match_length):
+						checked[x][y + i] = True
 
 		return max_match
 	# 根据坐标获取对应位置的拼图对象
