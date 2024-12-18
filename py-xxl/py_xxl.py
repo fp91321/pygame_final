@@ -6,8 +6,8 @@ import random
 
 WIDTH = 800
 HEIGHT = 800
-NUMGRID = 8
-GRIDSIZE = 70
+NUMGRID = 12
+GRIDSIZE = 50
 XMARGIN = (WIDTH - GRIDSIZE * NUMGRID) // 2
 YMARGIN = (HEIGHT - GRIDSIZE * NUMGRID) // 2
 ROOTDIR = os.path.dirname(os.path.abspath(__file__))
@@ -271,15 +271,45 @@ class Game():
 		return None
 	# 是否有连续一样的三个块
 	def isMatch(self):
+		max_match = [0, 0, 0, 0]  # [方向 (1: 橫, 2: 直), 起點x, 起點y, 最大匹配長度]
+		checked = [[False] * NUMGRID for _ in range(NUMGRID)]  # 用於標記是否已檢查
+
 		for x in range(NUMGRID):
 			for y in range(NUMGRID):
-				if x + 2 < NUMGRID:
-					if self.getGemByPos(x, y).type == self.getGemByPos(x+1, y).type == self.getGemByPos(x+2, y).type:
-						return [1, x, y]
-				if y + 2 < NUMGRID:
-					if self.getGemByPos(x, y).type == self.getGemByPos(x, y+1).type == self.getGemByPos(x, y+2).type:
-						return [2, x, y]
-		return [0, x, y]
+				if checked[x][y]:
+					continue  # 跳過已檢查範圍
+
+				# 檢查橫向連續
+				match_length = 1
+				for i in range(1, 5):
+					if x + i < NUMGRID and self.getGemByPos(x, y).type == self.getGemByPos(x + i, y).type:
+						match_length += 1
+					else:
+						break
+				if match_length >= 3:
+					if match_length > max_match[3]:
+						print(match_length)
+						max_match = [1, x, y, match_length]
+					# 標記已檢查的格子
+					for i in range(match_length):
+						checked[x + i][y] = True
+
+				# 檢查縱向連續
+				match_length = 1
+				for i in range(1, 5):
+					if y + i < NUMGRID and self.getGemByPos(x, y).type == self.getGemByPos(x, y + i).type:
+						match_length += 1
+					else:
+						break
+				if match_length >= 3:
+					if match_length > max_match[3]:
+						print(match_length)
+						max_match = [2, x, y, match_length]
+					# 標記已檢查的格子
+					for i in range(match_length):
+						checked[x][y + i] = True
+
+		return max_match
 	# 根据坐标获取对应位置的拼图对象
 	def getGemByPos(self, x, y):
 		return self.all_gems[x][y]
@@ -356,14 +386,15 @@ def gameInit():
 	#font = pygame.font.Font(os.path.join(ROOTDIR, 'resources/simsun.ttc'), 40)
 	font = pygame.font.SysFont('Arial', 30, bold=True)
 	font_end = pygame.font.SysFont('Arial', 50, bold=True)
+		# 显示开始页面
+	showStartScreen(screen, font)
 	# 加载图片
 	gem_imgs = []
 	for i in range(1, 8):
 		gem_imgs.append(os.path.join(ROOTDIR, 'resources/images/gem%s.png' % i))
 	game = Game(screen, font, gem_imgs)
 
-	# 显示开始页面
-	showStartScreen(screen, font)
+
 
 	while True:
 		score = game.start()
@@ -383,30 +414,16 @@ def gameInit():
 				if event.type == pygame.QUIT:
 					pygame.quit()
 					sys.exit()
-				if event.type == pygame.KEYUP and event.key == pygame.K_r:
+				if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
 					flag = True
 			if flag:
 				break
 			#screen.fill((127, 255, 127))
-
-			text0 = 'Good Game'
-			text1 = 'Final Scores: %s' % score
-			text2 = 'Press R to Restart'
-			
 			screen.blit(bg_image, (0, 0))  # 绘制背景图片
-			y = 140
-			for idx, text in enumerate([text0, text1, text2]):
-				text_render = font_end.render(text, 1, (255, 200, 0))
-				rect = text_render.get_rect()
-				if idx == 0:
-					rect.left, rect.top = (80, y)
-				elif idx == 1:
-					rect.left, rect.top = (80, y)
-				elif idx == 2:
-					rect.left, rect.top = (80, y)
-				y += 120
-				
-				screen.blit(text_render, rect)
+			screen.blit(font_end.render('Good Game', True, (255, 200, 0)), (80, 140))
+			screen.blit(font_end.render(f'Final Scores: {score}', True, (255, 200, 0)), (80, 260))
+			screen.blit(font_end.render('Press R to Restart', True, (255, 200, 0)), (80, 380))
+
 			pygame.display.update()
 		game.reset()
 
