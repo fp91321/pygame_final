@@ -6,7 +6,7 @@ import random
 
 WIDTH = 800
 HEIGHT = 800
-NUMGRID = 12
+NUMGRID = 10
 GRIDSIZE = 50
 XMARGIN = (WIDTH - GRIDSIZE * NUMGRID) // 2
 YMARGIN = (HEIGHT - GRIDSIZE * NUMGRID) // 2
@@ -137,6 +137,7 @@ class Game():
 			pygame.display.update()
 			clock.tick(FPS)
 	# 初始化
+	"""
 	def reset(self):
 		# 随机生成各个块
 		while True:
@@ -160,7 +161,46 @@ class Game():
 		# 拼出一个的奖励
 		self.reward = 10
 		# 设置总时间
-		self.remaining_time = 30
+		self.remaining_time = 300
+	"""
+	def reset(self):
+		# 固定生成測試佈局
+		self.all_gems = []
+		self.gems_group = pygame.sprite.Group()
+
+		# 測試佈局的定義
+		# 測試水平與垂直 3 消、4 消、5 消
+		test_layout = [
+			[1, 1, 2, 1, 3, 4, 5, 6, 1, 6],  # 水平 3 消（最上）
+			[4, 4, 1, 4, 4, 3, 5, 6, 5, 1],  # 水平 4 消（第二行）
+			[5, 5, 3, 5, 5, 3, 1, 2, 4, 4],  # 水平 5 消（第三行）
+			[1, 2, 5, 4, 5, 1, 2, 3, 4, 5],  # 無消除
+			[2, 3, 4, 5, 1, 2, 1, 4, 3, 2],  # 水平 3 消（第五行）
+			[3, 3, 2, 4, 5, 5, 6, 6, 1, 1],  # 水平 3 消（第六行）
+			[6, 6, 3, 6, 6, 2, 3, 4, 5, 1],  # 無消除
+			[1, 1, 2, 1, 4, 5, 2, 3, 4, 5],  # 無消除
+			[5, 4, 3, 3, 1, 5, 4, 1, 2, 1],  # 水平 4 消（第九行）
+			[3, 3, 5, 3, 3, 1, 1, 3, 1, 1]   # 水平 3 消（第十行）
+		]
+
+		# 將測試佈局映射到 Puzzle 對象
+		for x in range(NUMGRID):
+			self.all_gems.append([])
+			for y in range(NUMGRID):
+				gem_type = test_layout[y][x] if y < len(test_layout) and x < len(test_layout[0]) else random.randint(1, 6)
+				gem = Puzzle(
+					img_path=self.gem_imgs[gem_type - 1],  # 根據 gem_type 選擇對應圖片
+					size=(GRIDSIZE, GRIDSIZE),
+					position=[XMARGIN + x * GRIDSIZE, YMARGIN + y * GRIDSIZE],
+					downlen=0  # 無需下落動畫
+				)
+				self.all_gems[x].append(gem)
+				self.gems_group.add(gem)
+
+		# 初始化其他屬性
+		self.score = 0
+		self.reward = 10
+		self.remaining_time = 300
 	# 显示剩余时间
 	def showRemainingTime(self):
 		remaining_time_render = self.font.render('Count Down: %ss' % str(self.remaining_time), 1, (55, 205, 255))
@@ -184,24 +224,66 @@ class Game():
 		if res_match[0] == 1:
 			start = res_match[2]
 			while start > -2:
-				for each in [res_match[1], res_match[1]+1, res_match[1]+2]:
-					gem = self.getGemByPos(*[each, start])
-					if start == res_match[2]:
-						self.gems_group.remove(gem)
-						self.all_gems[each][start] = None
-					elif start >= 0:
-						gem.target_y += GRIDSIZE
-						gem.fixed = False
-						gem.direction = 'down'
-						self.all_gems[each][start+1] = gem
-					else:
-						gem = Puzzle(img_path=random.choice(self.gem_imgs), 
-							size=(GRIDSIZE, GRIDSIZE), 
-							position=[XMARGIN+each*GRIDSIZE, YMARGIN-GRIDSIZE], 
-							downlen=GRIDSIZE
-							)
-						self.gems_group.add(gem)
-						self.all_gems[each][start+1] = gem
+				if res_match[3] == 3:
+					print("im 3")					
+					for each in [res_match[1], res_match[1]+1, res_match[1]+2]:
+						gem = self.getGemByPos(*[each, start])
+						if start == res_match[2]:
+							self.gems_group.remove(gem)
+							self.all_gems[each][start] = None
+						elif start >= 0:
+							gem.target_y += GRIDSIZE
+							gem.fixed = False
+							gem.direction = 'down'
+							self.all_gems[each][start+1] = gem
+						else:
+							gem = Puzzle(img_path=random.choice(self.gem_imgs), 
+								size=(GRIDSIZE, GRIDSIZE), 
+								position=[XMARGIN+each*GRIDSIZE, YMARGIN-GRIDSIZE], 
+								downlen=GRIDSIZE
+								)
+							self.gems_group.add(gem)
+							self.all_gems[each][start+1] = gem
+				elif res_match[3] == 4 :
+					print("im 5")
+					for each in [res_match[1], res_match[1]+1, res_match[1]+2, res_match[1]+3]:
+						gem = self.getGemByPos(*[each, start])
+						if start == res_match[2]:
+							self.gems_group.remove(gem)
+							self.all_gems[each][start] = None
+						elif start >= 0:
+							gem.target_y += GRIDSIZE
+							gem.fixed = False
+							gem.direction = 'down'
+							self.all_gems[each][start+1] = gem
+						else:
+							gem = Puzzle(img_path=random.choice(self.gem_imgs), 
+								size=(GRIDSIZE, GRIDSIZE), 
+								position=[XMARGIN+each*GRIDSIZE, YMARGIN-GRIDSIZE], 
+								downlen=GRIDSIZE
+								)
+							self.gems_group.add(gem)
+							self.all_gems[each][start+1] = gem
+				elif res_match[3] == 5 :
+					print("im 5")	
+					for each in [res_match[1], res_match[1]+1, res_match[1]+2, res_match[1]+3, res_match[3]+4]:
+						gem = self.getGemByPos(*[each, start])
+						if start == res_match[2]:
+							self.gems_group.remove(gem)
+							self.all_gems[each][start] = None
+						elif start >= 0:
+							gem.target_y += GRIDSIZE
+							gem.fixed = False
+							gem.direction = 'down'
+							self.all_gems[each][start+1] = gem
+						else:
+							gem = Puzzle(img_path=random.choice(self.gem_imgs), 
+								size=(GRIDSIZE, GRIDSIZE), 
+								position=[XMARGIN+each*GRIDSIZE, YMARGIN-GRIDSIZE], 
+								downlen=GRIDSIZE
+								)
+							self.gems_group.add(gem)
+							self.all_gems[each][start+1] = gem
 				start -= 1
 		elif res_match[0] == 2:
 			start = res_match[2]
@@ -272,12 +354,12 @@ class Game():
 	# 是否有连续一样的三个块
 	def isMatch(self):
 		max_match = [0, 0, 0, 0]  # [方向 (1: 橫, 2: 直), 起點x, 起點y, 最大匹配長度]
-		checked = [[False] * NUMGRID for _ in range(NUMGRID)]  # 用於標記是否已檢查
+		#checked = [[False] * NUMGRID for _ in range(NUMGRID)]  # 用於標記是否已檢查
 
 		for x in range(NUMGRID):
 			for y in range(NUMGRID):
-				if checked[x][y]:
-					continue  # 跳過已檢查範圍
+				#if checked[x][y]:
+				#	continue  # 跳過已檢查範圍
 
 				# 檢查橫向連續
 				match_length = 1
@@ -291,8 +373,8 @@ class Game():
 						print(match_length)
 						max_match = [1, x, y, match_length]
 					# 標記已檢查的格子
-					for i in range(match_length):
-						checked[x + i][y] = True
+					#for i in range(match_length):
+						#checked[x + i][y] = True
 
 				# 檢查縱向連續
 				match_length = 1
@@ -306,8 +388,8 @@ class Game():
 						print(match_length)
 						max_match = [2, x, y, match_length]
 					# 標記已檢查的格子
-					for i in range(match_length):
-						checked[x][y + i] = True
+					#for i in range(match_length):
+						#checked[x][y + i] = True
 
 		return max_match
 	# 根据坐标获取对应位置的拼图对象
