@@ -7,7 +7,7 @@ import random
 WIDTH = 800
 HEIGHT = 800
 NUMGRID = 10
-GRIDSIZE = 70
+GRIDSIZE = 60
 XMARGIN = (WIDTH - GRIDSIZE * NUMGRID) // 2
 YMARGIN = (HEIGHT - GRIDSIZE * NUMGRID) // 2
 ROOTDIR = os.path.dirname(os.path.abspath(__file__))
@@ -63,6 +63,10 @@ class Game():
 		self.level = 1
 		self.target_score = 100  # 初始目標分數，隨關卡調整
 		self.reset()
+		#加載音效
+		self.match3_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match3.wav'))
+		self.match4_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match4.wav'))
+		self.match5_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match5.wav'))
 	#設置當前關卡的目標分數和遊戲參數。
 	def setLevel(self, level):		
 		self.level = level
@@ -82,7 +86,7 @@ class Game():
 		gem_selected_xy2 = None
 		swap_again = False
 		add_score = 0
-		add_score_showtimes = 10
+
 		time_pre = int(time.time())
 		# 游戏主循环
 		while True:
@@ -134,10 +138,8 @@ class Game():
 				self.drawBlock(self.getGemByPos(*gem_selected_xy).rect)
 			if add_score:
 				self.drawAddScore(add_score)
-				add_score_showtimes -= 1
-				if add_score_showtimes < 1:
-					add_score_showtimes = 10
-					add_score = 0
+				add_score_showtimes = 5
+
 			self.remaining_time -= (int(time.time()) - time_pre)
 			time_pre = int(time.time())
 			self.showRemainingTime()
@@ -223,21 +225,21 @@ class Game():
 		self.screen.blit(level_text, (20, 15))
 	# 显示剩余时间
 	def showRemainingTime(self):
-		remaining_time_render = self.font.render('Count Down: %ss' % str(self.remaining_time), 1, (55, 205, 255))
+		remaining_time_render = self.font.render('Timer: %ss' % str(self.remaining_time), 1, (55, 205, 255))
 		rect = remaining_time_render.get_rect()
-		rect.left, rect.top = (WIDTH-300, 15)
+		rect.left, rect.top = (WIDTH-200, HEIGHT-40)
 		self.screen.blit(remaining_time_render, rect)
 	# 显示得分
 	def drawScore(self):
-		score_render = self.font.render('Score:'+str(self.score), 1, (45, 195, 245))
+		score_render = self.font.render('Score:'+str(self.score), 1, (45, 255, 245))
 		rect = score_render.get_rect()
-		rect.left, rect.top = (WIDTH//4, 15)
+		rect.left, rect.top = (WIDTH//2-50, 15)
 		self.screen.blit(score_render, rect)
 	# 显示加分
 	def drawAddScore(self, add_score):
-		score_render = self.font.render('+'+str(add_score), 1, (255, 100, 100))
+		score_render = self.font.render('+'+str(add_score), 1, (255, 255, 255))
 		rect = score_render.get_rect()
-		rect.left, rect.top = (250, 250)
+		rect.left, rect.top = (5, 250)
 		self.screen.blit(score_render, rect)
 	# 生成新的拼图块
 	def generateNewGems(self, res_match):
@@ -306,9 +308,21 @@ class Game():
 	# 移除匹配的元素
 	def removeMatched(self, res_match):
 		if res_match[0] > 0:
+			match_length = res_match[3]  # 匹配的長度（3、4、5）
+			
+			# 設定分數倍率
+			if match_length == 3:
+				score_multiplier = 1  # 單倍分數
+			elif match_length == 4:
+				score_multiplier = 2  # 雙倍分數
+			elif match_length >= 5:
+				score_multiplier = 4  # 四倍分數
+			
+			# 移除匹配元素並計算得分
 			self.generateNewGems(res_match)
-			self.score += self.reward
-			return self.reward
+			match_score = self.reward * score_multiplier
+			self.score += match_score
+			return match_score  # 返回本次消除的得分
 		return 0
 	# 游戏界面的网格绘制
 	def drawGrids(self):
@@ -465,7 +479,7 @@ def showLevelTransition(screen, font, next_level):
 	screen.blit(transition_text, transition_rect)
 	
 	pygame.display.update()
-	pygame.time.wait(2000)  # 等待2秒
+	pygame.time.wait(3000)  # 等待3秒
 
 def showEndScreen(screen, font_end, score):
 	"""
@@ -484,12 +498,12 @@ def showEndScreen(screen, font_end, score):
 		
 		# 繪製結束畫面內容
 		screen.blit(bg_image, (0, 0))  # 繪製背景圖片
-		screen.blit(font_end.render('Good Game', True, (255, 200, 0)), (80, 140))
+		screen.blit(font_end.render('Game Over', True, (255, 200, 0)), (80, 140))
 		screen.blit(font_end.render(f'Final Scores: {score}', True, (255, 200, 0)), (80, 260))
 		screen.blit(font_end.render('Press R to Restart', True, (255, 200, 0)), (80, 380))
 		pygame.display.update()
 
-def showVictoryScreen(screen, font_end):
+def showVictoryScreen(screen, font_end, score):
 	"""
 	顯示遊戲通關畫面
 	"""
@@ -505,6 +519,7 @@ def showVictoryScreen(screen, font_end):
 		screen.blit(bg_image, (0, 0))
 		screen.blit(font_end.render('Congratulations!', True, (255, 255, 0)), (80, 140))
 		screen.blit(font_end.render('You beat the game!', True, (255, 200, 0)), (80, 260))
+		screen.blit(font_end.render(f'Final Scores: {score}', True, (255, 200, 0)), (80, 380))
 		pygame.display.update()
 
 # 初始化游戏
@@ -516,6 +531,7 @@ def gameInit():
 	# 加載字體
 	font = pygame.font.SysFont('Arial', 30, bold=True)
 	font_end = pygame.font.SysFont('Arial', 50, bold=True)
+	#
 	
 	# 顯示開始頁面
 	showStartScreen(screen, font)
@@ -547,7 +563,7 @@ def gameInit():
 				pygame.quit()
 				sys.exit()
 
-	showVictoryScreen(screen, font_end)  # 通關後的勝利畫面
+	showVictoryScreen(screen, font_end, score)  # 通關後的勝利畫面
 	pygame.quit()
 	sys.exit()
 
