@@ -7,7 +7,7 @@ import random
 WIDTH = 800
 HEIGHT = 800
 NUMGRID = 10
-GRIDSIZE = 50
+GRIDSIZE = 70
 XMARGIN = (WIDTH - GRIDSIZE * NUMGRID) // 2
 YMARGIN = (HEIGHT - GRIDSIZE * NUMGRID) // 2
 ROOTDIR = os.path.dirname(os.path.abspath(__file__))
@@ -60,14 +60,24 @@ class Game():
 		self.screen = screen
 		self.font = font
 		self.gem_imgs = gem_imgs
+		self.level = 1
+		self.target_score = 100  # 初始目標分數，隨關卡調整
 		self.reset()
+	#設置當前關卡的目標分數和遊戲參數。
+	def setLevel(self, level):		
+		self.level = level
+		self.target_score = level * 100  # 每關目標分數遞增
+		self.remaining_time = 20 - (level - 1) * 5  # 隨關卡減少時間，但保證最低值
+		#self.gem_imgs = self.gem_imgs[:min(7, 3 + level)]  # 增加難度，隨關卡增加寶石種類
 	# 开始游戏
-	def start(self):
+	def start(self,level=1):
 		clock = pygame.time.Clock()
 		# 遍历整个游戏界面更新位置
 		overall_moving = True
 		# 指定某些对象个体更新位置
 		individual_moving = False
+		self.setLevel(level)
+		print("current level:",level)
 		gem_selected_xy = None
 		gem_selected_xy2 = None
 		swap_again = False
@@ -132,6 +142,7 @@ class Game():
 			time_pre = int(time.time())
 			self.showRemainingTime()
 			self.drawScore()
+			self.drawLevel()
 			if self.remaining_time <= 0:
 				return self.score
 			pygame.display.update()
@@ -162,6 +173,7 @@ class Game():
 		self.reward = 10
 		# 设置总时间
 		self.remaining_time = 300
+	
 	"""
 	def reset(self):
 		# 固定生成測試佈局
@@ -176,7 +188,7 @@ class Game():
 			[5, 5, 3, 5, 5, 3, 1, 2, 1, 4],  # 水平 5 消（第三行）
 			[1, 2, 5, 4, 5, 1, 2, 3, 4, 1],  # 無消除
 			[2, 3, 4, 5, 1, 5, 1, 4, 3, 1],  # 水平 3 消（第五行）
-			[3, 3, 2, 4, 5, 5, 6, 6, 1, 2],  # 水平 3 消（第六行）
+			[3, 3, 2, 4, 5, 5, 6, 1, 1, 2],  # 水平 3 消（第六行）
 			[6, 6, 3, 6, 6, 2, 5, 4, 5, 1],  # 無消除
 			[1, 1, 2, 1, 4, 5, 2, 3, 4, 5],  # 無消除
 			[5, 4, 3, 3, 1, 5, 4, 1, 2, 1],  # 水平 4 消（第九行）
@@ -200,7 +212,15 @@ class Game():
 		# 初始化其他屬性
 		self.score = 0
 		self.reward = 10
-		self.remaining_time = 300
+		self.remaining_time = 3
+	#根據關卡返回目標分數
+	def getLevelTarget(self, level):		
+		target_scores = {1: 100, 2: 150, 3: 200}  # 可以根據需求調整
+		return target_scores.get(level, 300)
+	#在遊戲界面顯示當前關卡
+	def drawLevel(self):
+		level_text = self.font.render(f'Level: {self.level}', True, (255, 255, 255))
+		self.screen.blit(level_text, (20, 15))
 	# 显示剩余时间
 	def showRemainingTime(self):
 		remaining_time_render = self.font.render('Count Down: %ss' % str(self.remaining_time), 1, (55, 205, 255))
@@ -211,7 +231,7 @@ class Game():
 	def drawScore(self):
 		score_render = self.font.render('Score:'+str(self.score), 1, (45, 195, 245))
 		rect = score_render.get_rect()
-		rect.left, rect.top = (30, 15)
+		rect.left, rect.top = (WIDTH//4, 15)
 		self.screen.blit(score_render, rect)
 	# 显示加分
 	def drawAddScore(self, add_score):
@@ -223,74 +243,37 @@ class Game():
 	def generateNewGems(self, res_match):
 		if res_match[0] == 1:
 			start = res_match[2]
+			match_length = res_match[3]  # 匹配的長度（3、4 或 5）
+
 			while start > -2:
-				if res_match[3] == 3:
-									
-					for each in [res_match[1], res_match[1]+1, res_match[1]+2]:
+				for each in range(res_match[1], res_match[1] + match_length):
+					gem = self.getGemByPos(*[each, start])
 
-						gem = self.getGemByPos(*[each, start])
-						if start == res_match[2]:
-							self.gems_group.remove(gem)
-							self.all_gems[each][start] = None
-						elif start >= 0:
-							gem.target_y += GRIDSIZE
-							gem.fixed = False
-							gem.direction = 'down'
-							self.all_gems[each][start+1] = gem
-						else:
-							gem = Puzzle(img_path=random.choice(self.gem_imgs), 
-								size=(GRIDSIZE, GRIDSIZE), 
-								position=[XMARGIN+each*GRIDSIZE, YMARGIN-GRIDSIZE], 
-								downlen=GRIDSIZE
-								)
-							self.gems_group.add(gem)
-							self.all_gems[each][start+1] = gem
-				elif res_match[3] == 4 :					
-					for each in [res_match[1], res_match[1]+1, res_match[1]+2, res_match[1]+3]:
+					if start == res_match[2]:  # 移除匹配行的方塊
+						self.gems_group.remove(gem)
+						self.all_gems[each][start] = None
+					elif start >= 0:  # 已存在的方塊下移
+						
+						gem.target_y += GRIDSIZE
+						gem.fixed = False
+						gem.direction = 'down'
+						self.all_gems[each][start + 1] = gem
+					else:  # 超出範圍，生成新方塊
+						gem = Puzzle(
+							img_path=random.choice(self.gem_imgs),
+							size=(GRIDSIZE, GRIDSIZE),
+							position=[XMARGIN + each * GRIDSIZE, YMARGIN - GRIDSIZE],
+							downlen=GRIDSIZE
+						)
+						self.gems_group.add(gem)
+						self.all_gems[each][start + 1] = gem
 
-						gem = self.getGemByPos(*[each, start])
-						if start == res_match[2]:
-							self.gems_group.remove(gem)
-							self.all_gems[each][start] = None
-						elif start >= 0:
-							gem.target_y += GRIDSIZE
-							gem.fixed = False
-							gem.direction = 'down'
-							self.all_gems[each][start+1] = gem
-						else:
-							gem = Puzzle(img_path=random.choice(self.gem_imgs), 
-								size=(GRIDSIZE, GRIDSIZE), 
-								position=[XMARGIN+each*GRIDSIZE, YMARGIN-GRIDSIZE], 
-								downlen=GRIDSIZE
-								)
-							self.gems_group.add(gem)
-							self.all_gems[each][start+1] = gem
-				elif res_match[3] == 5 :
-
-					for each in [res_match[1], res_match[1]+1, res_match[1]+2, res_match[1]+3, res_match[1]+4]:
-						gem = self.getGemByPos(*[each, start])
-
-						if start == res_match[2]:
-							self.gems_group.remove(gem)
-							self.all_gems[each][start] = None
-						elif start >= 0:
-							gem.target_y += GRIDSIZE
-							gem.fixed = False
-							gem.direction = 'down'
-							self.all_gems[each][start+1] = gem
-						else:
-							gem = Puzzle(img_path=random.choice(self.gem_imgs), 
-								size=(GRIDSIZE, GRIDSIZE), 
-								position=[XMARGIN+each*GRIDSIZE, YMARGIN-GRIDSIZE], 
-								downlen=GRIDSIZE
-								)
-							self.gems_group.add(gem)
-							self.all_gems[each][start+1] = gem
 				start -= 1
+
 		elif res_match[0] == 2:
 			start = res_match[2]
 			length = res_match[3]  # 消除的垂直長度（3、4 或 5）
-			while start > -length-1:  # 處理範圍擴展到 `-length`
+			while start > -length-1:  # 處理範圍擴展到 `-length-1`
 				
 				if start == res_match[2]:
 					# 移除起始行的所有匹配方塊
@@ -300,6 +283,7 @@ class Game():
 						self.all_gems[res_match[1]][start + each] = None
 
 				elif start >= 0:
+					
 					# 處理非初始行的方塊，讓它們掉落
 					gem = self.getGemByPos(*[res_match[1], start])
 					gem.target_y += GRIDSIZE * length  # 根據匹配長度動態移動
@@ -469,56 +453,105 @@ def showStartScreen(screen, font):
 				sys.exit()
 			elif event.type == pygame.MOUSEBUTTONDOWN:
 				return
+def showLevelTransition(screen, font, next_level):
+	"""
+	顯示關卡切換過渡畫面
+	"""
+	bg_color = (0, 0, 0)
+	screen.fill(bg_color)
+	
+	transition_text = font.render(f'Level {next_level}', True, (255, 255, 255))
+	transition_rect = transition_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+	screen.blit(transition_text, transition_rect)
+	
+	pygame.display.update()
+	pygame.time.wait(2000)  # 等待2秒
+
+def showEndScreen(screen, font_end, score):
+	"""
+	顯示遊戲結束畫面，返回是否重新開始遊戲的布林值
+	"""
+	bg_image_path = os.path.join(ROOTDIR, 'resources/images/endgame.JPG')  # 替換為實際圖片名稱
+	bg_image = pygame.image.load(bg_image_path)    
+	bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))  # 調整圖片大小
+	
+	while True:
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				return False  # 結束遊戲
+			if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+				return True  # 重新開始遊戲
+		
+		# 繪製結束畫面內容
+		screen.blit(bg_image, (0, 0))  # 繪製背景圖片
+		screen.blit(font_end.render('Good Game', True, (255, 200, 0)), (80, 140))
+		screen.blit(font_end.render(f'Final Scores: {score}', True, (255, 200, 0)), (80, 260))
+		screen.blit(font_end.render('Press R to Restart', True, (255, 200, 0)), (80, 380))
+		pygame.display.update()
+
+def showVictoryScreen(screen, font_end):
+	"""
+	顯示遊戲通關畫面
+	"""
+	bg_image_path = os.path.join(ROOTDIR, 'resources/images/victory.JPG')  # 勝利背景圖片
+	bg_image = pygame.image.load(bg_image_path)
+	bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))
+	
+	while True:
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				return
+		
+		screen.blit(bg_image, (0, 0))
+		screen.blit(font_end.render('Congratulations!', True, (255, 255, 0)), (80, 140))
+		screen.blit(font_end.render('You beat the game!', True, (255, 200, 0)), (80, 260))
+		pygame.display.update()
 
 # 初始化游戏
 def gameInit():
 	pygame.init()
 	screen = pygame.display.set_mode((WIDTH, HEIGHT))
 	pygame.display.set_caption('2024_PyGame_Final_Project')
-	# 加载字体
-	#font = pygame.font.Font(os.path.join(ROOTDIR, 'resources/simsun.ttc'), 40)
+	
+	# 加載字體
 	font = pygame.font.SysFont('Arial', 30, bold=True)
 	font_end = pygame.font.SysFont('Arial', 50, bold=True)
-		# 显示开始页面
+	
+	# 顯示開始頁面
 	showStartScreen(screen, font)
-	# 加载图片
+	
+	# 加載圖片
 	gem_imgs = []
 	for i in range(1, 8):
 		gem_imgs.append(os.path.join(ROOTDIR, 'resources/images/gem%s.png' % i))
+
 	game = Game(screen, font, gem_imgs)
 
+	level = 1
+	max_level = 3  # 總關卡數
+
+	while level <= max_level:
+		# 遊戲開始
+		score = game.start(level)  # 傳入當前關卡
+
+		if score >= game.getLevelTarget(level):
+			if level < max_level:
+				showLevelTransition(screen, font, level + 1)  # 顯示過渡畫面
+			level += 1
+		else:
+			restart = showEndScreen(screen, font_end, score)
+			if restart:
+				level = 1
+				game.reset()
+			else:
+				pygame.quit()
+				sys.exit()
+
+	showVictoryScreen(screen, font_end)  # 通關後的勝利畫面
+	pygame.quit()
+	sys.exit()
 
 
-	while True:
-		score = game.start()
-		flag = False
-		# 设置退出、重新开始
-		bg_image_path = os.path.join(ROOTDIR, 'resources/images/endgame.JPG')  # 替换为实际图片名称
-		bg_image = pygame.image.load(bg_image_path)    
-		# 裁剪背景图片
-		#bg_image = pygame.transform.rotate(bg_image, 90)
-		bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))
-		
-
-		while True:
-			
-
-			for event in pygame.event.get():
-				if event.type == pygame.QUIT:
-					pygame.quit()
-					sys.exit()
-				if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
-					flag = True
-			if flag:
-				break
-			#screen.fill((127, 255, 127))
-			screen.blit(bg_image, (0, 0))  # 绘制背景图片
-			screen.blit(font_end.render('Good Game', True, (255, 200, 0)), (80, 140))
-			screen.blit(font_end.render(f'Final Scores: {score}', True, (255, 200, 0)), (80, 260))
-			screen.blit(font_end.render('Press R to Restart', True, (255, 200, 0)), (80, 380))
-
-			pygame.display.update()
-		game.reset()
 
 if __name__ == '__main__':
 	gameInit()
