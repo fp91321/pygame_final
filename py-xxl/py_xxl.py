@@ -64,14 +64,14 @@ class Game():
 		self.target_score = 100  # 初始目標分數，隨關卡調整
 		self.reset()
 		#加載音效
-		self.match3_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match3.wav'))
-		self.match4_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match4.wav'))
-		self.match5_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match5.wav'))
+		self.match3_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match3.mp3'))
+		self.match4_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match4.mp3'))
+		self.match5_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match5.mp3'))
 	#設置當前關卡的目標分數和遊戲參數。
 	def setLevel(self, level):		
 		self.level = level
 		self.target_score = level * 100  # 每關目標分數遞增
-		self.remaining_time = 20 - (level - 1) * 5  # 隨關卡減少時間，但保證最低值
+		self.remaining_time = 30 - (level - 1) * 5  # 隨關卡減少時間，但保證最低值
 		#self.gem_imgs = self.gem_imgs[:min(7, 3 + level)]  # 增加難度，隨關卡增加寶石種類
 	# 开始游戏
 	def start(self,level=1):
@@ -145,6 +145,7 @@ class Game():
 			self.showRemainingTime()
 			self.drawScore()
 			self.drawLevel()
+			self.drawTarget()
 			if self.remaining_time <= 0:
 				return self.score
 			pygame.display.update()
@@ -193,7 +194,7 @@ class Game():
 			[3, 3, 2, 4, 5, 5, 6, 1, 1, 2],  # 水平 3 消（第六行）
 			[6, 6, 3, 6, 6, 2, 5, 4, 5, 1],  # 無消除
 			[1, 1, 2, 1, 4, 5, 2, 3, 4, 5],  # 無消除
-			[5, 4, 3, 3, 1, 5, 4, 1, 2, 1],  # 水平 4 消（第九行）
+			[5, 4, 3, 3, 5, 5, 4, 1, 2, 1],  # 水平 4 消（第九行）
 			[3, 3, 5, 3, 3, 1, 1, 3, 1, 1]   # 水平 3 消（第十行）
 		]
 
@@ -227,14 +228,17 @@ class Game():
 	def showRemainingTime(self):
 		remaining_time_render = self.font.render('Timer: %ss' % str(self.remaining_time), 1, (55, 205, 255))
 		rect = remaining_time_render.get_rect()
-		rect.left, rect.top = (WIDTH-200, HEIGHT-40)
+		rect.left, rect.top = (WIDTH-180, HEIGHT-40)
 		self.screen.blit(remaining_time_render, rect)
 	# 显示得分
 	def drawScore(self):
 		score_render = self.font.render('Score:'+str(self.score), 1, (45, 255, 245))
 		rect = score_render.get_rect()
-		rect.left, rect.top = (WIDTH//2-50, 15)
-		self.screen.blit(score_render, rect)
+		self.screen.blit(score_render, (20, HEIGHT-40))
+	# 显示目標得分
+	def drawTarget(self):
+		target_text = self.font.render(f'Target: {self.target_score}', True, (255, 255, 255))
+		self.screen.blit(target_text, (WIDTH - 170, 15))
 	# 显示加分
 	def drawAddScore(self, add_score):
 		score_render = self.font.render('+'+str(add_score), 1, (255, 255, 255))
@@ -313,11 +317,16 @@ class Game():
 			# 設定分數倍率
 			if match_length == 3:
 				score_multiplier = 1  # 單倍分數
+				self.match3_sound.play() 
+				self.match3_sound.set_volume(0.5)
 			elif match_length == 4:
 				score_multiplier = 2  # 雙倍分數
+				self.match4_sound.play()
+				self.match4_sound.set_volume(0.5)
 			elif match_length >= 5:
 				score_multiplier = 4  # 四倍分數
-			
+				self.match5_sound.play()
+				self.match5_sound.set_volume(0.7)
 			# 移除匹配元素並計算得分
 			self.generateNewGems(res_match)
 			match_score = self.reward * score_multiplier
@@ -525,6 +534,7 @@ def showVictoryScreen(screen, font_end, score):
 # 初始化游戏
 def gameInit():
 	pygame.init()
+	pygame.mixer.init()
 	screen = pygame.display.set_mode((WIDTH, HEIGHT))
 	pygame.display.set_caption('2024_PyGame_Final_Project')
 	
