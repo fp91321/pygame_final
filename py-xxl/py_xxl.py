@@ -63,10 +63,39 @@ class Game():
 		self.level = 1
 		self.target_score = 100  # 初始目標分數，隨關卡調整
 		self.reset()
+		self.show_tutorial = True  # 新增屬性，判斷是否顯示教學畫面
 		#加載音效
 		self.match3_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match3.mp3'))
 		self.match4_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match4.mp3'))
 		self.match5_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match5.mp3'))
+	def showTutorial(self):
+		# 教學內容
+		self.screen.fill((0, 0, 0))
+		title_text = self.font.render("Welcome to Icehappy Game!", True, (255, 255, 0))
+		self.screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, 100))
+
+		instruction_lines = [
+			"Match 3 or more gems to score points.",
+			"Click 2 adjacent gems to swap their positions.",
+			"Complete the target score to the next level.",
+			"Click anywhere to start the game. Good luck!"
+		]
+
+		for i, line in enumerate(instruction_lines):
+			instruction_text = self.font.render(line, True, (255, 255, 255))
+			self.screen.blit(instruction_text, (WIDTH // 2 - instruction_text.get_width() // 2, 200 + i * 50))
+
+		pygame.display.update()
+
+		# 等待玩家按下任意鍵
+		while True:
+			for event in pygame.event.get():
+				if event.type == pygame.QUIT:
+					pygame.quit()
+					sys.exit()
+				elif event.type == pygame.MOUSEBUTTONDOWN:
+					self.show_tutorial = False
+					return
 	#設置當前關卡的目標分數和遊戲參數。
 	def setLevel(self, level):		
 		self.level = level
@@ -88,6 +117,10 @@ class Game():
 		add_score = 0
 
 		time_pre = int(time.time())
+		# 顯示教學畫面
+		if self.show_tutorial:
+			self.showTutorial()
+		
 		# 游戏主循环
 		while True:
 			for event in pygame.event.get():
