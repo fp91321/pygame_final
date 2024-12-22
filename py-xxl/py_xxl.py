@@ -4,8 +4,8 @@ import time
 import pygame
 import random
 
-WIDTH = 800
-HEIGHT = 800
+WIDTH = 900
+HEIGHT = 900
 NUMGRID = 10
 GRIDSIZE = 60
 XMARGIN = (WIDTH - GRIDSIZE * NUMGRID) // 2
@@ -61,9 +61,10 @@ class Game():
 		self.font = font
 		self.gem_imgs = gem_imgs
 		self.level = 1
-		self.target_score = 100  # 初始目標分數，隨關卡調整
+		#self.target_score = 200  # 初始目標分數，隨關卡調整
 		self.reset()
 		self.show_tutorial = True  # 新增屬性，判斷是否顯示教學畫面
+		self.gem_count = {i: 0 for i in range(1, len(gem_imgs) + 1)}  # 初始化不同方塊類型的消除數量
 		#加載音效
 		self.match3_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match3.mp3'))
 		self.match4_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match4.mp3'))
@@ -179,6 +180,7 @@ class Game():
 			self.drawScore()
 			self.drawLevel()
 			self.drawTarget()
+			self.drawGemCount()
 			if self.remaining_time <= 0:
 				return self.score
 			pygame.display.update()
@@ -278,6 +280,12 @@ class Game():
 		rect = score_render.get_rect()
 		rect.left, rect.top = (5, 250)
 		self.screen.blit(score_render, rect)
+	def drawGemCount(self):
+		y_offset = 100
+		for gem_type, count in self.gem_count.items():
+			text = self.font.render(f'Gem {gem_type}: {count}', True, (25, 205, 205))
+			self.screen.blit(text, (20, y_offset))
+			y_offset += 30
 	# 生成新的拼图块
 	def generateNewGems(self, res_match):
 		if res_match[0] == 1:
@@ -361,6 +369,17 @@ class Game():
 				self.match5_sound.play()
 				self.match5_sound.set_volume(0.7)
 			# 移除匹配元素並計算得分
+			if res_match[0] == 1: # 橫向匹配
+				for x in range(res_match[1], res_match[1] + match_length):
+					gem = self.getGemByPos(x, res_match[2])
+					gem_type = int(''.join(filter(str.isdigit, gem.type)))  # 提取數字並轉為整數
+					self.gem_count[gem_type] += 1  # 更新累積消除數量
+			if res_match[0] == 2: # 橫向匹配
+				for y in range(res_match[2], res_match[2] + match_length):
+					gem = self.getGemByPos(res_match[1], y)
+					gem_type = int(''.join(filter(str.isdigit, gem.type)))  # 提取數字並轉為整數
+					self.gem_count[gem_type] += 1  # 更新累積消除數量
+			# 移除匹配元素並計算得分		
 			self.generateNewGems(res_match)
 			match_score = self.reward * score_multiplier
 			self.score += match_score
