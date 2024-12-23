@@ -69,6 +69,9 @@ class Game():
 		self.match3_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match3.mp3'))
 		self.match4_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match4.mp3'))
 		self.match5_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match5.mp3'))
+		#加載圖片
+		self.final_building_img = pygame.image.load(os.path.join(ROOTDIR, "resources/images/final_building.png"))
+		self.final_building_img = pygame.transform.smoothscale(self.final_building_img, (400, 600))  # 调整图片大小
 	def showTutorial(self):
 		# 教學內容
 		self.screen.fill((0, 0, 0))
@@ -116,7 +119,6 @@ class Game():
 		gem_selected_xy2 = None
 		swap_again = False
 		add_score = 0
-
 		time_pre = int(time.time())
 		# 顯示教學畫面
 		if self.show_tutorial:
@@ -176,6 +178,7 @@ class Game():
 
 			self.remaining_time -= (int(time.time()) - time_pre)
 			time_pre = int(time.time())
+			self.drawRightImage()
 			self.showRemainingTime()
 			self.drawScore()
 			self.drawLevel()
@@ -265,6 +268,24 @@ class Game():
 		rect = remaining_time_render.get_rect()
 		rect.left, rect.top = (WIDTH-180, HEIGHT-40)
 		self.screen.blit(remaining_time_render, rect)
+	# 在右侧绘制图片
+	def drawRightImage(self):
+		# 計算比例
+		ratio = self.score / self.target_score
+		ratio = max(0, min(ratio, 1))
+		
+		# 原始圖片尺寸
+		image_width, image_height = self.final_building_img.get_size()
+		cropped_height = int(image_height * ratio)
+		
+		# 裁切圖片
+		cropped_image = self.final_building_img.subsurface((0, image_height - cropped_height, image_width, cropped_height))
+		
+		# 計算貼圖位置
+		cropped_pos = (WIDTH - 280, HEIGHT // 2 + (300 - cropped_height))
+		
+		# 畫圖片
+		self.screen.blit(cropped_image, cropped_pos)
 	# 显示得分
 	def drawScore(self):
 		score_render = self.font.render('Score:'+str(self.score), 1, (45, 255, 245))
