@@ -3,6 +3,11 @@ import sys
 import time
 import pygame
 import random
+from typing import Tuple, List, Dict, Union, Optional
+
+# 屬性型別定義
+Position = Tuple[int, int]
+Size = Tuple[int, int]
 
 WIDTH = 900
 HEIGHT = 900
@@ -13,66 +18,64 @@ YMARGIN = (HEIGHT - GRIDSIZE * NUMGRID) // 2
 ROOTDIR = os.path.dirname(os.path.abspath(__file__))
 FPS = 60
 
-# 拼图类
+# 拼图类 
 class Puzzle(pygame.sprite.Sprite):
-	def __init__(self, img_path, size, position, downlen, **kwargs):
-		pygame.sprite.Sprite.__init__(self)
-		self.image = pygame.image.load(img_path)
+	def __init__(self, img_path: str, size: Size, position: Position, downlen: int, **kwargs):
+		super().__init__()
+		self.image: pygame.Surface = pygame.image.load(img_path)
 		self.image = pygame.transform.smoothscale(self.image, size)
-		self.rect = self.image.get_rect()
+		self.rect: pygame.Rect = self.image.get_rect()
 		self.rect.left, self.rect.top = position
-		self.downlen = downlen
-		self.target_x = position[0]
-		self.target_y = position[1] + downlen
-		self.type = img_path.split('/')[-1].split('.')[0]
-		self.fixed = False
-		self.speed_x = 8
-		self.speed_y = 8
-		self.direction = 'down'
-	# Moves the block in the specified direction and stops it when reaching the target position
-	def move(self):
+		self.downlen: int = downlen
+		self.target_x: int = position[0]
+		self.target_y: int = position[1] + downlen
+		self.type: str = img_path.split('/')[-1].split('.')[0]
+		self.fixed: bool = False
+		self.speed_x: int = 8
+		self.speed_y: int = 8
+		self.direction: str = 'down'
+
+	def move(self) -> None:
 		if self.direction == 'down':
-			self.rect.top = min(self.target_y, self.rect.top+self.speed_y)
+			self.rect.top = min(self.target_y, self.rect.top + self.speed_y)
 			if self.target_y == self.rect.top:
 				self.fixed = True
 		elif self.direction == 'up':
-			self.rect.top = max(self.target_y, self.rect.top-self.speed_y)
+			self.rect.top = max(self.target_y, self.rect.top - self.speed_y)
 			if self.target_y == self.rect.top:
 				self.fixed = True
 		elif self.direction == 'left':
-			self.rect.left = max(self.target_x, self.rect.left-self.speed_x)
+			self.rect.left = max(self.target_x, self.rect.left - self.speed_x)
 			if self.target_x == self.rect.left:
 				self.fixed = True
 		elif self.direction == 'right':
-			self.rect.left = min(self.target_x, self.rect.left+self.speed_x)
+			self.rect.left = min(self.target_x, self.rect.left + self.speed_x)
 			if self.target_x == self.rect.left:
 				self.fixed = True
-	# Returns the current coordinates of the block.
-	def getPosition(self):
+
+	def getPosition(self) -> Position:
 		return self.rect.left, self.rect.top
-	# Updates the block's coordinates.
-	def setPosition(self, position):
+
+	def setPosition(self, position: Position) -> None:
 		self.rect.left, self.rect.top = position
 
 # 游戏类
 class Game():
-	def __init__(self, screen, font, gem_imgs, **kwargs):
-		self.screen = screen
-		self.font = font
-		self.gem_imgs = gem_imgs
-		self.level = 1
-		#self.target_score = 200  # 初始目標分數，隨關卡調整
-		self.reset()
-		self.show_tutorial = True  # 新增屬性，判斷是否顯示教學畫面
-		self.gem_count = {i: 0 for i in range(1, len(gem_imgs) + 1)}  # 初始化不同方塊類型的消除數量
-		#加載音效
-		self.match3_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match3.mp3'))
-		self.match4_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match4.mp3'))
-		self.match5_sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match5.mp3'))
-		#加載圖片
-		self.final_building_img = pygame.image.load(os.path.join(ROOTDIR, "resources/images/final_building.png"))
-		self.final_building_img = pygame.transform.smoothscale(self.final_building_img, (400, 600))  # 调整图片大小
-	def showTutorial(self):
+	def __init__(self, screen: pygame.Surface, font: pygame.font.Font, gem_imgs: List[str], **kwargs):
+			self.screen: pygame.Surface = screen
+			self.font: pygame.font.Font = font
+			self.gem_imgs: List[str] = gem_imgs
+			self.level: int = 1
+			self.target_score: int = 200
+			self.reset()
+			self.show_tutorial: bool = True
+			self.gem_count: Dict[int, int] = {i: 0 for i in range(1, len(gem_imgs) + 1)}
+			self.match3_sound: pygame.mixer.Sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match3.mp3'))
+			self.match4_sound: pygame.mixer.Sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match4.mp3'))
+			self.match5_sound: pygame.mixer.Sound = pygame.mixer.Sound(os.path.join(ROOTDIR, 'resources/sounds/match5.mp3'))
+			self.final_building_img: pygame.Surface = pygame.image.load(os.path.join(ROOTDIR, "resources/images/final_building.png"))
+			self.final_building_img = pygame.transform.smoothscale(self.final_building_img, (400, 600))
+	def showTutorial(self) -> None:
 		# 教學內容
 		self.screen.fill((0, 0, 0))
 		title_text = self.font.render("Welcome to Icehappy Game!", True, (255, 255, 0))
@@ -101,13 +104,13 @@ class Game():
 					self.show_tutorial = False
 					return
 	#設置當前關卡的目標分數和遊戲參數。
-	def setLevel(self, level):		
+	def setLevel(self, level: int) -> None:		
 		self.level = level
 		self.target_score = level * 100  # 每關目標分數遞增
 		self.remaining_time = 30 - (level - 1) * 5  # 隨關卡減少時間，但保證最低值
 		#self.gem_imgs = self.gem_imgs[:min(7, 3 + level)]  # 增加難度，隨關卡增加寶石種類
 	# 开始游戏
-	def start(self,level=1):
+	def start(self, level: int = 1) -> int:
 		clock = pygame.time.Clock()
 		# 遍历整个游戏界面更新位置
 		overall_moving = True
@@ -130,7 +133,7 @@ class Game():
 				if event.type == pygame.QUIT or (event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE):
 					pygame.quit()
 					sys.exit()
-				elif event.type == pygame.MOUSEBUTTONUP:
+				elif event.type == pygame.MOUSEBUTTONDOWN:
 					if (not overall_moving) and (not individual_moving) and (not add_score):
 						position = pygame.mouse.get_pos()
 						if gem_selected_xy is None:
@@ -190,7 +193,7 @@ class Game():
 			clock.tick(FPS)
 	# 初始化
 	"""
-	def reset(self):
+	def reset(self) -> None:
 		# 随机生成各个块
 		while True:
 			self.all_gems = []
@@ -216,7 +219,7 @@ class Game():
 		self.remaining_time = 300
 	
 	"""
-	def reset(self):
+	def reset(self) -> None:
 		# 固定生成測試佈局
 		self.all_gems = []
 		self.gems_group = pygame.sprite.Group()
@@ -255,21 +258,21 @@ class Game():
 		self.reward = 10
 		self.remaining_time = 3
 	#根據關卡返回目標分數
-	def getLevelTarget(self, level):		
+	def getLevelTarget(self, level: int) -> int:		
 		target_scores = {1: 100, 2: 150, 3: 200}  # 可以根據需求調整
 		return target_scores.get(level, 300)
 	#在遊戲界面顯示當前關卡
-	def drawLevel(self):
+	def drawLevel(self) -> None:
 		level_text = self.font.render(f'Level: {self.level}', True, (255, 255, 255))
 		self.screen.blit(level_text, (20, 15))
 	# 显示剩余时间
-	def showRemainingTime(self):
+	def showRemainingTime(self) -> None:
 		remaining_time_render = self.font.render('Timer: %ss' % str(self.remaining_time), 1, (55, 205, 255))
 		rect = remaining_time_render.get_rect()
 		rect.left, rect.top = (WIDTH-180, HEIGHT-40)
 		self.screen.blit(remaining_time_render, rect)
 	# 在右侧绘制图片
-	def drawRightImage(self):
+	def drawRightImage(self) -> None:
 		# 計算比例
 		ratio = self.score / self.target_score
 		ratio = max(0, min(ratio, 1))
@@ -287,28 +290,28 @@ class Game():
 		# 畫圖片
 		self.screen.blit(cropped_image, cropped_pos)
 	# 显示得分
-	def drawScore(self):
+	def drawScore(self) -> None:
 		score_render = self.font.render('Score:'+str(self.score), 1, (45, 255, 245))
 		rect = score_render.get_rect()
 		self.screen.blit(score_render, (20, HEIGHT-40))
 	# 显示目標得分
-	def drawTarget(self):
+	def drawTarget(self) -> None:
 		target_text = self.font.render(f'Target: {self.target_score}', True, (255, 255, 255))
 		self.screen.blit(target_text, (WIDTH - 170, 15))
 	# 显示加分
-	def drawAddScore(self, add_score):
+	def drawAddScore(self, add_score: int) -> None:
 		score_render = self.font.render('+'+str(add_score), 1, (255, 255, 255))
 		rect = score_render.get_rect()
-		rect.left, rect.top = (5, 250)
+		rect.left, rect.top = (5, 350)
 		self.screen.blit(score_render, rect)
-	def drawGemCount(self):
+	def drawGemCount(self) -> None:
 		y_offset = 100
 		for gem_type, count in self.gem_count.items():
 			text = self.font.render(f'Gem {gem_type}: {count}', True, (25, 205, 205))
-			self.screen.blit(text, (20, y_offset))
+			self.screen.blit(text, (10, y_offset))
 			y_offset += 30
 	# 生成新的拼图块
-	def generateNewGems(self, res_match):
+	def generateNewGems(self, res_match: Tuple[int, int, int, int]) -> None:
 		if res_match[0] == 1:
 			start = res_match[2]
 			match_length = res_match[3]  # 匹配的長度（3、4 或 5）
@@ -372,7 +375,7 @@ class Game():
 
 				start -= 1
 	# 移除匹配的元素
-	def removeMatched(self, res_match):
+	def removeMatched(self, res_match: Tuple[int, int, int, int]) -> int:
 		if res_match[0] > 0:
 			match_length = res_match[3]  # 匹配的長度（3、4、5）
 			
@@ -407,16 +410,16 @@ class Game():
 			return match_score  # 返回本次消除的得分
 		return 0
 	# 游戏界面的网格绘制
-	def drawGrids(self):
+	def drawGrids(self) -> None:
 		for x in range(NUMGRID):
 			for y in range(NUMGRID):
 				rect = pygame.Rect((XMARGIN+x*GRIDSIZE, YMARGIN+y*GRIDSIZE, GRIDSIZE, GRIDSIZE))
 				self.drawBlock(rect, color=(255, 165, 0), size=1)
 	# 画矩形 block 框
-	def drawBlock(self, block, color=(255, 0, 0), size=2):
+	def drawBlock(self, block: pygame.Rect, color: Tuple[int, int, int] = (255, 0, 0), size: int = 2) -> None:
 		pygame.draw.rect(self.screen, color, block, size)
 	# 下落特效
-	def dropGems(self, x, y):
+	def dropGems(self, x: int, y: int) -> bool:
 		if not self.getGemByPos(x, y).fixed:
 			self.getGemByPos(x, y).move()
 		if x < NUMGRID-1:
@@ -429,21 +432,21 @@ class Game():
 		else:
 			return self.isFull()
 	# 是否每个位置都有拼图块了
-	def isFull(self):
+	def isFull(self) -> bool:
 		for x in range(NUMGRID):
 			for y in range(NUMGRID):
 				if not self.getGemByPos(x, y).fixed:
 					return False
 		return True
 	# 检查有无拼图块被选中
-	def checkSelected(self, position):
+	def checkSelected(self, position: Tuple[int, int]) -> Optional[List[int]]:
 		for x in range(NUMGRID):
 			for y in range(NUMGRID):
 				if self.getGemByPos(x, y).rect.collidepoint(*position):
 					return [x, y]
 		return None
 	# 是否有连续一样的三个块
-	def isMatch(self):
+	def isMatch(self) -> List[Union[int, List[int]]]:
 		max_match = [0, 0, 0, 0]  # [方向 (1: 橫, 2: 直), 起點x, 起點y, 最大匹配長度]
 		checked = [[False] * NUMGRID for _ in range(NUMGRID)]  # 用於標記是否已檢查
 
@@ -487,7 +490,7 @@ class Game():
 	def getGemByPos(self, x, y):
 		return self.all_gems[x][y]
 	# 交换拼图
-	def swapGem(self, gem1_pos, gem2_pos):
+	def swapGem(self, gem1_pos: Tuple[int, int], gem2_pos: Tuple[int, int]) -> bool:
 		margin = gem1_pos[0] - gem2_pos[0] + gem1_pos[1] - gem2_pos[1]
 		if abs(margin) != 1:
 			return False
@@ -518,7 +521,7 @@ class Game():
 		return self.info
 
 # 添加“开始游戏”页面
-def showStartScreen(screen, font):
+def showStartScreen(screen: pygame.Surface, font: pygame.font.Font) -> None:
     # 加载背景图片
 	bg_image_path = os.path.join(ROOTDIR, 'resources/images/background.JPG')  # 替换为实际图片名称
 	bg_image = pygame.image.load(bg_image_path)    
@@ -549,7 +552,7 @@ def showStartScreen(screen, font):
 				sys.exit()
 			elif event.type == pygame.MOUSEBUTTONDOWN:
 				return
-def showLevelTransition(screen, font, next_level):
+def showLevelTransition(screen: pygame.Surface, font: pygame.font.Font, next_level: int) -> None:
 	"""
 	顯示關卡切換過渡畫面
 	"""
@@ -563,7 +566,7 @@ def showLevelTransition(screen, font, next_level):
 	pygame.display.update()
 	pygame.time.wait(3000)  # 等待3秒
 
-def showEndScreen(screen, font_end, score):
+def showEndScreen(screen: pygame.Surface, font_end: pygame.font.Font, score: int) -> bool:
 	"""
 	顯示遊戲結束畫面，返回是否重新開始遊戲的布林值
 	"""
@@ -585,7 +588,7 @@ def showEndScreen(screen, font_end, score):
 		screen.blit(font_end.render('Press R to Restart', True, (255, 200, 0)), (80, 380))
 		pygame.display.update()
 
-def showVictoryScreen(screen, font_end, score):
+def showVictoryScreen(screen: pygame.Surface, font_end: pygame.font.Font, score: int) -> None:
 	"""
 	顯示遊戲通關畫面
 	"""
@@ -605,7 +608,7 @@ def showVictoryScreen(screen, font_end, score):
 		pygame.display.update()
 
 # 初始化游戏
-def gameInit():
+def gameInit() -> None:
 	pygame.init()
 	pygame.mixer.init()
 	screen = pygame.display.set_mode((WIDTH, HEIGHT))
