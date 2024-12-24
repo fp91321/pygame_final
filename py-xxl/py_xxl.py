@@ -106,7 +106,8 @@ class Game():
 	#設置當前關卡的目標分數和遊戲參數。
 	def setLevel(self, level: int) -> None:		
 		self.level = level
-		self.target_score = level * 100  # 每關目標分數遞增
+		self.target_score = self.getLevelTarget(level)
+		#self.target_score = level * 150  # 每關目標分數遞增
 		self.remaining_time = 30 - (level - 1) * 5  # 隨關卡減少時間，但保證最低值
 		#self.gem_imgs = self.gem_imgs[:min(7, 3 + level)]  # 增加難度，隨關卡增加寶石種類
 	# 开始游戏
@@ -259,7 +260,7 @@ class Game():
 		self.remaining_time = 3
 	#根據關卡返回目標分數
 	def getLevelTarget(self, level: int) -> int:		
-		target_scores = {1: 100, 2: 150, 3: 200}  # 可以根據需求調整
+		target_scores = {1: 150, 2: 300, 3: 450}  # 可以根據需求調整
 		return target_scores.get(level, 300)
 	#在遊戲界面顯示當前關卡
 	def drawLevel(self) -> None:
@@ -552,10 +553,8 @@ def showStartScreen(screen: pygame.Surface, font: pygame.font.Font) -> None:
 				sys.exit()
 			elif event.type == pygame.MOUSEBUTTONDOWN:
 				return
+#顯示關卡切換過渡畫面
 def showLevelTransition(screen: pygame.Surface, font: pygame.font.Font, next_level: int) -> None:
-	"""
-	顯示關卡切換過渡畫面
-	"""
 	bg_color = (0, 0, 0)
 	screen.fill(bg_color)
 	
@@ -565,11 +564,8 @@ def showLevelTransition(screen: pygame.Surface, font: pygame.font.Font, next_lev
 	
 	pygame.display.update()
 	pygame.time.wait(3000)  # 等待3秒
-
+# 顯示遊戲結束畫面，返回是否重新開始遊戲的布林值
 def showEndScreen(screen: pygame.Surface, font_end: pygame.font.Font, score: int) -> bool:
-	"""
-	顯示遊戲結束畫面，返回是否重新開始遊戲的布林值
-	"""
 	bg_image_path = os.path.join(ROOTDIR, 'resources/images/endgame.JPG')  # 替換為實際圖片名稱
 	bg_image = pygame.image.load(bg_image_path)    
 	bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))  # 調整圖片大小
@@ -587,11 +583,9 @@ def showEndScreen(screen: pygame.Surface, font_end: pygame.font.Font, score: int
 		screen.blit(font_end.render(f'Final Scores: {score}', True, (255, 200, 0)), (80, 260))
 		screen.blit(font_end.render('Press R to Restart', True, (255, 200, 0)), (80, 380))
 		pygame.display.update()
-
+# 顯示遊戲通關畫面
 def showVictoryScreen(screen: pygame.Surface, font_end: pygame.font.Font, score: int) -> None:
-	"""
-	顯示遊戲通關畫面
-	"""
+
 	bg_image_path = os.path.join(ROOTDIR, 'resources/images/victory.JPG')  # 勝利背景圖片
 	bg_image = pygame.image.load(bg_image_path)
 	bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))
