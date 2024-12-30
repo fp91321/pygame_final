@@ -115,7 +115,7 @@ class Game():
 		self.level = level
 		self.target_score = self.getLevelTarget(level)
 		#self.target_score = level * 150  # 每關目標分數遞增
-		self.remaining_time = 30 - (level - 1) * 5  # 隨關卡減少時間，但保證最低值
+		self.remaining_time = 5 - (level - 1) * 1  # 隨關卡減少時間，但保證最低值
 		#self.gem_imgs = self.gem_imgs[:min(7, 3 + level)]  # 增加難度，隨關卡增加寶石種類
 	# 开始游戏
 	def start(self, level: int = 1) -> int:
@@ -141,7 +141,9 @@ class Game():
 		bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT)) 
 		
 
-		
+		# 在關卡開始前隨機調整分數
+		#if level > 1:  # 如果不是第一關
+		#	self.adjustScore()
 		
 		# 游戏主循环
 		while True:
@@ -276,8 +278,24 @@ class Game():
 		self.remaining_time = 3
 	#根據關卡返回目標分數
 	def getLevelTarget(self, level: int) -> int:		
-		target_scores = {1: 150, 2: 300, 3: 450}  # 可以根據需求調整
+		target_scores = {1: 15, 2: 30, 3: 45}  # 可以根據需求調整
 		return target_scores.get(level, 300)
+		# 顯示訊息的方法
+
+	def adjustScore(self) -> None:
+		# 隨機決定是增加還是減少分數
+		score_change = 10*random.randint(-2, 5)  # 範圍內的隨機分數變動
+		self.score += score_change
+		self.score = max(0, self.score)  # 確保分數不為負數
+		
+		# 設定分數變動訊息
+		if score_change > 0:
+			self.message = f"Bonus! Score + {score_change}!"
+		elif score_change < 0:
+			self.message = f"Penalty! Score - {abs(score_change)}!"
+		else:
+			self.message = "No score adjustment this time."
+		return self.message
 	#在遊戲界面顯示當前關卡
 	def drawLevel(self) -> None:
 		level_text = self.font.render(f'Level: {self.level}', True, (255, 255, 255))
@@ -583,12 +601,12 @@ def showStartScreen(screen: pygame.Surface, font: pygame.font.Font) -> None:
 			elif event.type == pygame.MOUSEBUTTONDOWN:
 				return
 #顯示關卡切換過渡畫面
-def showLevelTransition(screen: pygame.Surface, font: pygame.font.Font, next_level: int) -> None:
+def showLevelTransition(screen: pygame.Surface, font: pygame.font.Font, next_level: int, message: str) -> None:
 
 	bg_color = (0, 5, 0)
 	screen.fill(bg_color)
 	
-	transition_text = font.render(f'Level {next_level}', True, (255, 255, 255))
+	transition_text = font.render(f'Level {next_level} : {message}', True, (255, 255, 255))
 	transition_rect = transition_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
 	screen.blit(transition_text, transition_rect)
 	
@@ -662,7 +680,9 @@ def gameInit() -> None:
 
 		if score >= game.getLevelTarget(level):
 			if level < max_level:
-				showLevelTransition(screen, font, level + 1)  # 顯示過渡畫面
+				message=game.adjustScore()
+				print(message)
+				showLevelTransition(screen, font, level + 1,message)  # 顯示過渡畫面
 			level += 1
 		else:
 			restart = showEndScreen(screen, font_end, score)
