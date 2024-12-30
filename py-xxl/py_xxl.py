@@ -9,10 +9,10 @@ from typing import Tuple, List, Dict, Union, Optional
 Position = Tuple[int, int]
 Size = Tuple[int, int]
 
-WIDTH = 900
-HEIGHT = 900
+WIDTH = 950
+HEIGHT = 950
 NUMGRID = 10
-GRIDSIZE = 60
+GRIDSIZE = 64
 XMARGIN = (WIDTH - GRIDSIZE * NUMGRID) // 2
 YMARGIN = (HEIGHT - GRIDSIZE * NUMGRID) // 2
 ROOTDIR = os.path.dirname(os.path.abspath(__file__))
@@ -76,8 +76,15 @@ class Game():
 			self.final_building_img: pygame.Surface = pygame.image.load(os.path.join(ROOTDIR, "resources/images/final_building.png"))
 			self.final_building_img = pygame.transform.smoothscale(self.final_building_img, (400, 600))
 	def showTutorial(self) -> None:
+		# 加载背景图片
+		bg_image_path = os.path.join(ROOTDIR, 'resources/images/game_background.JPG')  # 替换为实际图片名称
+		bg_image = pygame.image.load(bg_image_path)    
+		bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT)) 
+		
+
+		self.screen.blit(bg_image, (0, 0))  # 绘制背景图片
 		# 教學內容
-		self.screen.fill((0, 0, 0))
+		#self.screen.fill((0, 0, 0))
 		title_text = self.font.render("Welcome to Icehappy Game!", True, (255, 255, 0))
 		self.screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, 100))
 
@@ -112,6 +119,10 @@ class Game():
 		#self.gem_imgs = self.gem_imgs[:min(7, 3 + level)]  # 增加難度，隨關卡增加寶石種類
 	# 开始游戏
 	def start(self, level: int = 1) -> int:
+		# 顯示教學畫面
+		if self.show_tutorial:
+			self.showTutorial()
+
 		clock = pygame.time.Clock()
 		# 遍历整个游戏界面更新位置
 		overall_moving = True
@@ -124,12 +135,17 @@ class Game():
 		swap_again = False
 		add_score = 0
 		time_pre = int(time.time())
-		# 顯示教學畫面
-		if self.show_tutorial:
-			self.showTutorial()
+
+		bg_image_path = os.path.join(ROOTDIR, 'resources/images/game_background.JPG')  # 替换为实际图片名称
+		bg_image = pygame.image.load(bg_image_path)    
+		bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT)) 
+		
+
+		
 		
 		# 游戏主循环
 		while True:
+			self.screen.blit(bg_image, (0, 0))  # 绘制背景图片
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT or (event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE):
 					pygame.quit()
@@ -171,7 +187,7 @@ class Game():
 						individual_moving = False
 						gem_selected_xy = None
 						gem_selected_xy2 = None
-			self.screen.fill((10,127,127))
+			#self.screen.fill((10,127,127))
 			self.drawGrids()
 			self.gems_group.draw(self.screen)
 			if gem_selected_xy:
@@ -298,7 +314,7 @@ class Game():
 	# 显示目標得分
 	def drawTarget(self) -> None:
 		target_text = self.font.render(f'Target: {self.target_score}', True, (255, 255, 255))
-		self.screen.blit(target_text, (WIDTH - 170, 15))
+		self.screen.blit(target_text, (WIDTH - 180, 15))
 	# 显示加分
 	def drawAddScore(self, add_score: int) -> None:
 		score_render = self.font.render('+'+str(add_score), 1, (255, 255, 255))
@@ -308,8 +324,8 @@ class Game():
 	def drawGemCount(self) -> None:
 		y_offset = 100
 		for gem_type, count in self.gem_count.items():
-			text = self.font.render(f'Gem {gem_type}: {count}', True, (25, 205, 205))
-			self.screen.blit(text, (10, y_offset))
+			text = self.font.render(f'Gem{gem_type}: {count}', True, (25, 205, 205))
+			self.screen.blit(text, (5, y_offset))
 			y_offset += 30
 	# 生成新的拼图块
 	def generateNewGems(self, res_match: Tuple[int, int, int, int]) -> None:
@@ -534,17 +550,17 @@ def showStartScreen(screen: pygame.Surface, font: pygame.font.Font) -> None:
 	while True:
 		screen.blit(bg_image, (0, 0))  # 绘制背景图片
         
-        # 游戏标题
-		title_text = font.render('2024 PyGame Final Project', True, (255, 255, 255))
-		title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 3))
-		screen.blit(title_text, title_rect)
-        
         # 开始提示
-		start_text = font.render('Click anywhere to start the game!!', True, (255, 255, 100))
-		start_rect = start_text.get_rect(center=(WIDTH // 2, HEIGHT // (7/3)))
+		start_text = font.render('Click anywhere to start the game!!', True, (105, 105, 100))
+		start_rect = start_text.get_rect(center=(WIDTH // 2, HEIGHT -80))
 		screen.blit(start_text, start_rect)
-        
 		pygame.display.update()
+
+		start_text = font.render('Click anywhere to start the game!!', True, (125, 105, 110))
+		start_rect = start_text.get_rect(center=(WIDTH // 2, HEIGHT -80))
+		screen.blit(start_text, start_rect)
+		pygame.display.update()
+
         
         # 等待玩家点击
 		for event in pygame.event.get():
@@ -609,7 +625,7 @@ def gameInit() -> None:
 	pygame.display.set_caption('2024_PyGame_Final_Project')
 	
 	# 加載字體
-	font = pygame.font.SysFont('Arial', 30, bold=True)
+	font = pygame.font.SysFont('Arial', 40, bold=True)
 	font_end = pygame.font.SysFont('Arial', 50, bold=True)
 	#
 	
