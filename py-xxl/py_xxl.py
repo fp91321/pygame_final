@@ -337,7 +337,7 @@ class Game():
 	def drawAddScore(self, add_score: int) -> None:
 		score_render = self.font.render('+'+str(add_score), 1, (255, 255, 255))
 		rect = score_render.get_rect()
-		rect.left, rect.top = (5, 350)
+		rect.left, rect.top = (15, 450)
 		self.screen.blit(score_render, rect)
 	def drawGemCount(self) -> None:
 		y_offset = 100  # 起始的 y 座標
@@ -605,7 +605,7 @@ def showLevelTransition(screen: pygame.Surface, font: pygame.font.Font, next_lev
 	running = True
 	screen_rect = screen.get_rect()
 	click_box = pygame.Rect(
-		(screen_rect.centerx - 50, screen_rect.centery - 50, 100, 100)
+		(screen_rect.centerx - 50, screen_rect.centery - 50, 500, 500)
 	)
 	bg_image_path = os.path.join(ROOTDIR, 'resources/images/level_background.jpg')  # 勝利背景圖片
 	bg_image = pygame.image.load(bg_image_path)
