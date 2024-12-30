@@ -314,7 +314,7 @@ class Game():
 	# 显示目標得分
 	def drawTarget(self) -> None:
 		target_text = self.font.render(f'Target: {self.target_score}', True, (255, 255, 255))
-		self.screen.blit(target_text, (WIDTH - 180, 15))
+		self.screen.blit(target_text, (WIDTH - 190, 15))
 	# 显示加分
 	def drawAddScore(self, add_score: int) -> None:
 		score_render = self.font.render('+'+str(add_score), 1, (255, 255, 255))
@@ -322,11 +322,24 @@ class Game():
 		rect.left, rect.top = (5, 350)
 		self.screen.blit(score_render, rect)
 	def drawGemCount(self) -> None:
-		y_offset = 100
+		y_offset = 100  # 起始的 y 座標
+		x_offset = 20   # 起始的 x 座標
+		spacing = 50    # 每種寶石的間距
+
 		for gem_type, count in self.gem_count.items():
-			text = self.font.render(f'Gem{gem_type}: {count}', True, (25, 205, 205))
-			self.screen.blit(text, (5, y_offset))
-			y_offset += 30
+			# 獲取對應寶石的圖片
+			gem_image = pygame.image.load(self.gem_imgs[gem_type - 1])
+			gem_image = pygame.transform.scale(gem_image, (42, 42))  # 調整圖片大小
+
+			# 繪製寶石圖片
+			self.screen.blit(gem_image, (x_offset, y_offset))
+
+			# 繪製寶石數量
+			count_text = self.font.render(str(count), True, (255, 255, 255))
+			self.screen.blit(count_text, (x_offset + 50, y_offset + 5))  # 調整數字的位置
+
+			# 更新 y_offset，為下一個寶石準備
+			y_offset += spacing
 	# 生成新的拼图块
 	def generateNewGems(self, res_match: Tuple[int, int, int, int]) -> None:
 		if res_match[0] == 1:
@@ -571,7 +584,8 @@ def showStartScreen(screen: pygame.Surface, font: pygame.font.Font) -> None:
 				return
 #顯示關卡切換過渡畫面
 def showLevelTransition(screen: pygame.Surface, font: pygame.font.Font, next_level: int) -> None:
-	bg_color = (0, 0, 0)
+
+	bg_color = (0, 5, 0)
 	screen.fill(bg_color)
 	
 	transition_text = font.render(f'Level {next_level}', True, (255, 255, 255))
@@ -625,7 +639,7 @@ def gameInit() -> None:
 	pygame.display.set_caption('2024_PyGame_Final_Project')
 	
 	# 加載字體
-	font = pygame.font.SysFont('Arial', 40, bold=True)
+	font = pygame.font.SysFont('Arial', 35, bold=True)
 	font_end = pygame.font.SysFont('Arial', 50, bold=True)
 	#
 	
