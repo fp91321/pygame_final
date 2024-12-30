@@ -602,10 +602,24 @@ def showStartScreen(screen: pygame.Surface, font: pygame.font.Font) -> None:
 				return
 #顯示關卡切換過渡畫面
 def showLevelTransition(screen: pygame.Surface, font: pygame.font.Font, next_level: int, message: str) -> None:
-
+	running = True
+	screen_rect = screen.get_rect()
+	click_box = pygame.Rect(
+		(screen_rect.centerx - 50, screen_rect.centery - 50, 100, 100)
+	)
+	bg_image_path = os.path.join(ROOTDIR, 'resources/images/level_background.jpg')  # 勝利背景圖片
+	bg_image = pygame.image.load(bg_image_path)
+	bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT))
+	
+	while running:
+		screen.blit(bg_image, (0, 0))  # 繪製背景圖片
+		pygame.display.flip()
+		for event in pygame.event.get():
+			if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+				if click_box.collidepoint(event.pos):
+					running = False
 	bg_color = (0, 5, 0)
 	screen.fill(bg_color)
-	
 	transition_text = font.render(f'Level {next_level} : {message}', True, (255, 255, 255))
 	transition_rect = transition_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
 	screen.blit(transition_text, transition_rect)
