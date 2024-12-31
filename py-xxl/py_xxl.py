@@ -115,7 +115,7 @@ class Game():
 		self.level = level
 		self.target_score = self.getLevelTarget(level)
 		#self.target_score = level * 150  # 每關目標分數遞增
-		self.remaining_time = 5 - (level - 1) * 1  # 隨關卡減少時間，但保證最低值
+		self.remaining_time = 20 - (level - 1) * 5  # 隨關卡減少時間，但保證最低值
 		#self.gem_imgs = self.gem_imgs[:min(7, 3 + level)]  # 增加難度，隨關卡增加寶石種類
 	# 开始游戏
 	def start(self, level: int = 1) -> int:
@@ -139,12 +139,7 @@ class Game():
 		bg_image_path = os.path.join(ROOTDIR, 'resources/images/game_background.JPG')  # 替换为实际图片名称
 		bg_image = pygame.image.load(bg_image_path)    
 		bg_image = pygame.transform.scale(bg_image, (WIDTH, HEIGHT)) 
-		
 
-		# 在關卡開始前隨機調整分數
-		#if level > 1:  # 如果不是第一關
-		#	self.adjustScore()
-		
 		# 游戏主循环
 		while True:
 			self.screen.blit(bg_image, (0, 0))  # 绘制背景图片
@@ -278,7 +273,7 @@ class Game():
 		self.remaining_time = 3
 	#根據關卡返回目標分數
 	def getLevelTarget(self, level: int) -> int:		
-		target_scores = {1: 15, 2: 30, 3: 45}  # 可以根據需求調整
+		target_scores = {1: 50, 2: 100, 3: 145}  # 可以根據需求調整
 		return target_scores.get(level, 300)
 		# 顯示訊息的方法
 
@@ -311,17 +306,13 @@ class Game():
 		# 計算比例
 		ratio = self.score / self.target_score
 		ratio = max(0, min(ratio, 1))
-		
 		# 原始圖片尺寸
 		image_width, image_height = self.final_building_img.get_size()
 		cropped_height = int(image_height * ratio)
-		
 		# 裁切圖片
 		cropped_image = self.final_building_img.subsurface((0, image_height - cropped_height, image_width, cropped_height))
-		
 		# 計算貼圖位置
 		cropped_pos = (WIDTH - 280, HEIGHT // 2 + (300 - cropped_height))
-		
 		# 畫圖片
 		self.screen.blit(cropped_image, cropped_pos)
 	# 显示得分
@@ -615,7 +606,10 @@ def showLevelTransition(screen: pygame.Surface, font: pygame.font.Font, next_lev
 		screen.blit(bg_image, (0, 0))  # 繪製背景圖片
 		pygame.display.flip()
 		for event in pygame.event.get():
-			if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+			if event.type == pygame.QUIT:
+				pygame.quit()
+				sys.exit()
+			elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
 				if click_box.collidepoint(event.pos):
 					running = False
 	bg_color = (0, 5, 0)
