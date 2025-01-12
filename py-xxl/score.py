@@ -5,7 +5,7 @@ class ScoreManager:
     def __init__(self):
         self.score = 0
         self.reward = 10
-        self.target_scores = {1: 15, 2: 30, 3: 70}  # 各關卡目標分數
+        self.target_scores = {1: 50, 2: 100, 3: 150}  # 各關卡目標分數
     
     def get_level_target(self, level: int) -> int:
         """獲取指定關卡的目標分數"""
@@ -25,7 +25,7 @@ class ScoreManager:
         self.score = max(0, self.score)
         
         if score_change > 0:
-            return f"Bonus! Score + {score_change}!"
+            return f"Bonus! Your Score + {score_change}!"
         elif score_change < 0:
-            return f"Penalty! Score - {abs(score_change)}!"
+            return f"Penalty! Your Score - {abs(score_change)}!"
         return "No score adjustment this time."

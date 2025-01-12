@@ -18,5 +18,5 @@ class SoundManager:
             self.match4_sound.set_volume(0.5)
             self.match4_sound.play()
         elif match_length >= 5:
-            self.match5_sound.set_volume(0.7)
+            self.match5_sound.set_volume(0.5)
             self.match5_sound.play()

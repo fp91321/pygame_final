@@ -1,8 +1,5 @@
 import os
-import sys
-import time
 import pygame
-import random
 from typing import Tuple, List, Dict, Union, Optional
 from setting import GameConfig
 
