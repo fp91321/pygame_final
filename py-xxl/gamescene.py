@@ -112,9 +112,9 @@ class GameScene:
                     return
             
             self.screen.blit(bg_image, (0, 0))
-            self.screen.blit(self.font_end.render('Congratulations!', True, (255, 255, 0)), (80, 140))
-            self.screen.blit(self.font_end.render('You beat the game!', True, (255, 200, 0)), (80, 260))
-            self.screen.blit(self.font_end.render(f'Final Scores: {score}', True, (255, 200, 0)), (80, 380))
+            self.screen.blit(self.font_end.render('Congratulations!', True, (5, 25, 0)), (80, 140))
+            self.screen.blit(self.font_end.render('You beat the game!', True, (5, 20, 0)), (80, 260))
+            self.screen.blit(self.font_end.render(f'Final Scores: {score}', True, (85, 180, 80)), (80, 380))
             pygame.display.update()
 
     def run(self) -> None:

@@ -5,7 +5,7 @@ class ScoreManager:
     def __init__(self):
         self.score = 0
         self.reward = 10
-        self.target_scores = {1: 150, 2: 300, 3: 700}  # 各關卡目標分數
+        self.target_scores = {1: 15, 2: 30, 3: 70}  # 各關卡目標分數
     
     def get_level_target(self, level: int) -> int:
         """獲取指定關卡的目標分數"""
