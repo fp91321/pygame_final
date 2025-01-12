@@ -16,7 +16,13 @@ class UIManager:
         self.final_building_img = pygame.transform.smoothscale(self.final_building_img, (400, 600))
         self.background = pygame.image.load(os.path.join(GameConfig.ROOTDIR, 'resources/images/game_background.JPG'))
         self.background = pygame.transform.scale(self.background, (GameConfig.WIDTH, GameConfig.HEIGHT))
-        
+        self.tutorial_background = pygame.image.load(os.path.join(GameConfig.ROOTDIR, 'resources/images/tutorial_background.JPG'))
+        self.tutorial_background = pygame.transform.scale(self.tutorial_background, (GameConfig.WIDTH, GameConfig.HEIGHT))
+
+    def draw_tutorial_background(self) -> None:
+        """繪製教學背景"""
+        self.screen.blit(self.tutorial_background, (0, 0))
+
     def draw_background(self) -> None:
         """繪製背景"""
         self.screen.blit(self.background, (0, 0))

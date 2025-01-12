@@ -158,12 +158,12 @@ class Game:
 
     def show_tutorial_screen(self) -> None:
         """顯示教學畫面"""
-        self.ui_manager.draw_background()
-        
+        self.ui_manager.draw_tutorial_background()
+        """
         # 教學內容
         title_text = self.ui_manager.font.render("Welcome to Icehappy Game!", True, (255, 255, 0))
         self.ui_manager.screen.blit(title_text, (GameConfig.WIDTH // 2 - title_text.get_width() // 2, 100))
-
+        
         instruction_lines = [
             "Match 3 or more gems to score points.",
             "Click 2 adjacent gems to swap their positions.",
@@ -175,7 +175,7 @@ class Game:
             instruction_text = self.ui_manager.font.render(line, True, (255, 255, 255))
             self.ui_manager.screen.blit(instruction_text, 
                 (GameConfig.WIDTH // 2 - instruction_text.get_width() // 2, 200 + i * 50))
-
+        """
         pygame.display.update()
 
         # 等待玩家點擊
